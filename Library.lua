@@ -289,7 +289,7 @@ end)
         -- Tab button with transparency
         local TabBtn = Instance.new("TextButton")
         TabBtn.Name = TabName
-        TabBtn.Size = UDim2.new(1, 0, 0, 38)
+        TabBtn.Size = UDim2.new(1, 0, 0, 25)
         TabBtn.BackgroundColor3 = Theme.Element
         TabBtn.BackgroundTransparency = Theme.ElementTransparency
         TabBtn.Text = TabName
