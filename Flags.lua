@@ -3,7 +3,7 @@ local VirtualUser = game:GetService("VirtualUser")
 
 local FlagsManager = {}
 
-FlagsManager.Folder = "MewHUB"
+FlagsManager.Folder = "NaoScript"
 FlagsManager.Ignore = {}
 FlagsManager.Flags = {}
 FlagsManager.Library = nil
@@ -12,7 +12,7 @@ FlagsManager.AntiAFK = {
     Connection = nil
 }
 
--- Simple Enhanced MewHUB Loader Animation
+-- Simple Enhanced NaoScript Loader Animation
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
@@ -24,7 +24,7 @@ blur.Size = 0
 TweenService:Create(blur, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = 28}):Play()
 
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-screenGui.Name = "MewHUBLoader"
+screenGui.Name = "NaoScriptLoader"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 
@@ -90,7 +90,7 @@ task.spawn(function()
     end
 end)
 
-local word = "มิวฮับ"
+local word = "Nao Script"
 local letters = {}
 
 local function tweenOutAndDestroy()
