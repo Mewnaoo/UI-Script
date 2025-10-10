@@ -1,0 +1,931 @@
+local httpService = game:GetService("HttpService")
+local VirtualUser = game:GetService("VirtualUser")
+
+local FlagsManager = {}
+
+FlagsManager.Folder = "มิวฮับ"
+FlagsManager.Ignore = {}
+FlagsManager.Flags = {}
+FlagsManager.Library = nil
+FlagsManager.AntiAFK = {
+    Enabled = false,
+    Connection = nil
+}
+
+-- Simple Enhanced Avantrix Loader Animation
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local player = Players.LocalPlayer
+
+-- Enhanced blur effect
+local blur = Instance.new("BlurEffect", Lighting)
+blur.Size = 0
+TweenService:Create(blur, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = 28}):Play()
+
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.Name = "AvantrixLoader"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+
+local frame = Instance.new("Frame", screenGui)
+frame.Size = UDim2.new(1, 0, 1, 0)
+frame.BackgroundTransparency = 1
+
+-- Enhanced background with subtle gradient
+local bg = Instance.new("Frame", frame)
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.BackgroundColor3 = Color3.fromRGB(8, 12, 25)
+bg.BackgroundTransparency = 1
+bg.ZIndex = 0
+
+-- Subtle gradient background
+local bgGradient = Instance.new("UIGradient", bg)
+bgGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(12, 18, 35)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(8, 12, 25)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 22, 40))
+})
+bgGradient.Rotation = 135
+
+TweenService:Create(bg, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundTransparency = 0.2}):Play()
+
+-- Simple loading dots animation
+local loadingContainer = Instance.new("Frame", frame)
+loadingContainer.Size = UDim2.new(0, 100, 0, 20)
+loadingContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+loadingContainer.Position = UDim2.new(0.5, 0, 0.75, 0)
+loadingContainer.BackgroundTransparency = 1
+loadingContainer.ZIndex = 3
+
+-- Create 3 loading dots
+local dots = {}
+for i = 1, 3 do
+    local dot = Instance.new("Frame", loadingContainer)
+    dot.Size = UDim2.new(0, 8, 0, 8)
+    dot.Position = UDim2.new(0, (i-1) * 25 + 20, 0.5, -4)
+    dot.BackgroundColor3 = Color3.fromRGB(100, 170, 255)
+    dot.BackgroundTransparency = 0.7
+    
+    local corner = Instance.new("UICorner", dot)
+    corner.CornerRadius = UDim.new(1, 0)
+    
+    table.insert(dots, dot)
+end
+
+-- Animate loading dots
+task.spawn(function()
+    while screenGui.Parent do
+        for i, dot in ipairs(dots) do
+            task.spawn(function()
+                TweenService:Create(dot, TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), 
+                    {BackgroundTransparency = 0.2, Size = UDim2.new(0, 12, 0, 12), Position = UDim2.new(0, (i-1) * 25 + 18, 0.5, -6)}):Play()
+                task.wait(0.4)
+                TweenService:Create(dot, TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.In), 
+                    {BackgroundTransparency = 0.7, Size = UDim2.new(0, 8, 0, 8), Position = UDim2.new(0, (i-1) * 25 + 20, 0.5, -4)}):Play()
+            end)
+            task.wait(0.2)
+        end
+        task.wait(0.8)
+    end
+end)
+
+local word = "Avantrix"
+local letters = {}
+
+local function tweenOutAndDestroy()
+    -- Fade out letters with stagger
+    for i, label in ipairs(letters) do
+        task.spawn(function()
+            TweenService:Create(label, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), 
+                {TextTransparency = 1, TextSize = 30, Position = UDim2.new(0.5, (i - (#word / 2 + 0.5)) * 65, 0.5, -20)}):Play()
+        end)
+        task.wait(0.08)
+    end
+    
+    -- Fade out loading dots
+    for _, dot in ipairs(dots) do
+        TweenService:Create(dot, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+    end
+    
+    -- Fade out background and blur
+    TweenService:Create(bg, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(blur, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = 0}):Play()
+    
+    task.wait(0.8)
+    screenGui:Destroy()
+    blur:Destroy()
+end
+
+-- Create letters with enhanced but simple animation
+for i = 1, #word do
+    local char = word:sub(i, i)
+
+    local label = Instance.new("TextLabel")
+    label.Text = char
+    label.Font = Enum.Font.GothamBlack
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.TextStrokeTransparency = 0.6
+    label.TextStrokeColor3 = Color3.fromRGB(40, 80, 140)
+    label.TextTransparency = 1
+    label.TextScaled = false
+    label.TextSize = 20
+    label.Size = UDim2.new(0, 60, 0, 60)
+    label.AnchorPoint = Vector2.new(0.5, 0.5)
+    label.Position = UDim2.new(0.5, (i - (#word / 2 + 0.5)) * 65, 0.5, 20)
+    label.BackgroundTransparency = 1
+    label.Parent = frame
+    label.ZIndex = 2
+
+    -- Enhanced gradient with more colors
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 190, 255)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(80, 150, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 110, 200))
+    })
+    gradient.Rotation = 90
+    gradient.Parent = label
+
+    -- Smooth entrance animation with bounce
+    local tweenIn = TweenService:Create(label, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), 
+        {TextTransparency = 0, TextSize = 68, Position = UDim2.new(0.5, (i - (#word / 2 + 0.5)) * 65, 0.5, 0)})
+    tweenIn:Play()
+
+    -- Add subtle floating animation after entrance
+    tweenIn.Completed:Connect(function()
+        local floatTween = TweenService:Create(label, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), 
+            {Position = UDim2.new(0.5, (i - (#word / 2 + 0.5)) * 65, 0.5, math.random(-3, 3))})
+        floatTween:Play()
+    end)
+
+    table.insert(letters, label)
+    task.wait(0.2)
+end
+
+task.wait(2.5)
+tweenOutAndDestroy()
+
+-- ANTI-AFK SYSTEM - AUTO ACTIVE
+function FlagsManager:StartAntiAFK()
+    if FlagsManager.AntiAFK.Enabled then
+        return true, "Anti-AFK is already running"
+    end
+    
+    FlagsManager.AntiAFK.Enabled = true
+    
+    -- Connect to Idled event to prevent AFK
+    FlagsManager.AntiAFK.Connection = player.Idled:Connect(function()
+        if FlagsManager.AntiAFK.Enabled then
+            local success = pcall(function()
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.new())
+            end)
+            
+            if success then
+                -- Fungsi helper untuk notifikasi yang aman
+                local function SafeNotification(title, message, duration)
+                    if FlagsManager.Library and FlagsManager.Library.Notification then
+                        local success = pcall(function()
+                            FlagsManager.Library:Notification(title, message, duration or 3)
+                        end)
+                        if not success then
+                            print("[Anti-AFK] " .. title .. ": " .. message)
+                        end
+                    else
+                        print("[Anti-AFK] " .. title .. ": " .. message)
+                    end
+                end
+                
+            end
+        end
+    end)
+    
+    return true, "Anti-AFK started successfully"
+end
+
+function FlagsManager:StopAntiAFK()
+    if not FlagsManager.AntiAFK.Enabled then
+        return false, "Anti-AFK is not running"
+    end
+    
+    FlagsManager.AntiAFK.Enabled = false
+    
+    if FlagsManager.AntiAFK.Connection then
+        FlagsManager.AntiAFK.Connection:Disconnect()
+        FlagsManager.AntiAFK.Connection = nil
+    end
+    
+    return true, "Anti-AFK stopped successfully"
+end
+
+function FlagsManager:GetAntiAFKStatus()
+    return FlagsManager.AntiAFK.Enabled
+end
+
+-- AUTO START ANTI-AFK SETELAH LOADING SELESAI
+task.spawn(function()
+    task.wait(4) -- Tunggu loading animation selesai + buffer
+    
+    -- Retry mechanism untuk memastikan Anti-AFK berhasil aktif
+    local retryCount = 0
+    local maxRetries = 5
+    
+    while not FlagsManager.AntiAFK.Enabled and retryCount < maxRetries do
+        local success, message = FlagsManager:StartAntiAFK()
+        if success then
+            break
+        else
+            retryCount = retryCount + 1
+            task.wait(1)
+        end
+    end
+end)
+
+-- GRADIENT FUNCTIONS - Dapat digunakan di luar kode ini
+local function interpolate_color(color1, color2, t)
+    local r = math.floor((1 - t) * color1[1] + t * color2[1])
+    local g = math.floor((1 - t) * color1[2] + t * color2[2])
+    local b = math.floor((1 - t) * color1[3] + t * color2[3])
+    return string.format("#%02x%02x%02x", r, g, b)
+end
+
+local function hex_to_rgb(hex)
+    -- Remove # if present
+    if hex:sub(1, 1) == "#" then
+        hex = hex:sub(2)
+    end
+    
+    return {
+        tonumber(hex:sub(1, 2), 16),
+        tonumber(hex:sub(3, 4), 16),
+        tonumber(hex:sub(5, 6), 16)
+    }
+end
+
+local function gradient(word)
+    if not word or #word == 0 then
+        return "Error"
+    end
+
+    local start_color, end_color
+    
+    if getgenv and getgenv().GradientColor == nil then
+        start_color = hex_to_rgb("ea00ff")
+        end_color = hex_to_rgb("5700ff")
+    elseif getgenv and getgenv().GradientColor then
+        start_color = hex_to_rgb(getgenv().GradientColor.startingColor or "ea00ff")
+        end_color = hex_to_rgb(getgenv().GradientColor.endingColor or "5700ff")
+    else
+        -- Fallback jika getgenv tidak tersedia
+        start_color = hex_to_rgb("ea00ff")
+        end_color = hex_to_rgb("5700ff")
+    end
+
+    local gradient_word = ""
+    local word_len = #word
+    local step = 1.0 / math.max(word_len - 1, 1)
+
+    for i = 1, word_len do
+        local t = step * (i - 1)
+        local color = interpolate_color(start_color, end_color, t)
+        gradient_word = gradient_word .. string.format('<font color="%s">%s</font>', color, word:sub(i, i))
+    end
+
+    return gradient_word
+end
+
+-- Export gradient function untuk penggunaan global
+if getgenv then
+    getgenv().gradient = gradient
+    getgenv().interpolate_color = interpolate_color
+    getgenv().hex_to_rgb = hex_to_rgb
+end
+
+-- Juga buat sebagai property dari FlagsManager
+FlagsManager.gradient = gradient
+FlagsManager.interpolate_color = interpolate_color
+FlagsManager.hex_to_rgb = hex_to_rgb
+
+FlagsManager.Parser = {
+    Toggle = {
+        Save = function(idx, object)
+            return { type = "Toggle", idx = idx, value = object.Value }
+        end,
+        Load = function(idx, data)
+            if FlagsManager.Flags[idx] then
+                FlagsManager.Flags[idx]:Set(data.value)
+            end
+        end,
+    },
+    Slider = {
+        Save = function(idx, object)
+            return { type = "Slider", idx = idx, value = tostring(object.Value) }
+        end,
+        Load = function(idx, data)
+            if FlagsManager.Flags[idx] then
+                FlagsManager.Flags[idx]:Set(tonumber(data.value))
+            end
+        end,
+    },
+    Dropdown = {
+        Save = function(idx, object)
+            return { type = "Dropdown", idx = idx, value = object.Value }
+        end,
+        Load = function(idx, data)
+            if FlagsManager.Flags[idx] then
+                FlagsManager.Flags[idx]:Set(data.value)
+            end
+        end,
+    },
+    Bind = {
+        Save = function(idx, object)
+            return { type = "Bind", idx = idx, value = object.Value }
+        end,
+        Load = function(idx, data)
+            if FlagsManager.Flags[idx] then
+                FlagsManager.Flags[idx]:Set(data.value)
+            end
+        end,
+    },
+    Colorpicker = {
+        Save = function(idx, object)
+            return { type = "Colorpicker", idx = idx, value = object.Value:ToHex() }
+        end,
+        Load = function(idx, data)
+            if FlagsManager.Flags[idx] then
+                FlagsManager.Flags[idx]:Set(Color3.fromHex(data.value))
+            end
+        end,
+    },
+    Input = {
+        Save = function(idx, object)
+            return { type = "Input", idx = idx, value = object.Value }
+        end,
+        Load = function(idx, data)
+            if FlagsManager.Flags[idx] then
+                FlagsManager.Flags[idx]:Set(data.value)
+            end
+        end,
+    }
+}
+
+function FlagsManager:SetIgnoreIndexes(list)
+    for _, key in next, list do
+        FlagsManager.Ignore[key] = true
+    end
+end
+
+function FlagsManager:SetFolder(folder)
+    FlagsManager.Folder = folder
+    FlagsManager:BuildFolderTree()
+end
+
+function FlagsManager:Save(name)
+    if not name then
+        return false, "no config file is selected"
+    end
+
+    local fullPath = FlagsManager.Folder .. "/settings/" .. name .. ".json"
+
+    local data = {
+        objects = {},
+        antiAFK = FlagsManager.AntiAFK.Enabled -- Simpan status Anti-AFK
+    }
+
+    for idx, option in next, FlagsManager.Flags do
+        if not FlagsManager.Parser[option.Type] then
+            continue
+        end
+        if FlagsManager.Ignore[idx] then
+            continue
+        end
+
+        table.insert(data.objects, FlagsManager.Parser[option.Type].Save(idx, option))
+    end
+
+    local success, encoded = pcall(httpService.JSONEncode, httpService, data)
+    if not success then
+        return false, "failed to encode data"
+    end
+
+    writefile(fullPath, encoded)
+    return true
+end
+
+function FlagsManager:Load(name)
+    if not name then
+        return false, "no config file is selected"
+    end
+
+    local file = FlagsManager.Folder .. "/settings/" .. name .. ".json"
+    if not isfile(file) then
+        return false, "invalid file"
+    end
+
+    local success, decoded = pcall(httpService.JSONDecode, httpService, readfile(file))
+    if not success then
+        return false, "decode error"
+    end
+
+    for _, option in next, decoded.objects do
+        if FlagsManager.Parser[option.type] then
+            task.spawn(function()
+                FlagsManager.Parser[option.type].Load(option.idx, option)
+            end)
+        end
+    end
+
+    -- Load Anti-AFK status if saved (tapi karena auto active, ini tidak diperlukan)
+    -- Anti-AFK akan selalu aktif otomatis
+
+    return true
+end
+
+function FlagsManager:Delete(name)
+    if not name then
+        return false, "no config file is selected"
+    end
+
+    local file = FlagsManager.Folder .. "/settings/" .. name .. ".json"
+    if not isfile(file) then
+        return false, "config file does not exist"
+    end
+
+    local success = pcall(function()
+        delfile(file)
+    end)
+
+    if not success then
+        return false, "failed to delete config file"
+    end
+
+    return true
+end
+
+function FlagsManager:BuildFolderTree()
+    local paths = {
+        FlagsManager.Folder,
+        FlagsManager.Folder .. "/settings",
+    }
+
+    for i = 1, #paths do
+        local str = paths[i]
+        if not isfolder(str) then
+            makefolder(str)
+        end
+    end
+end
+
+function FlagsManager:RefreshConfigList()
+    local list = listfiles(FlagsManager.Folder .. "/settings")
+
+    local out = {}
+    for i = 1, #list do
+        local file = list[i]
+        if file:sub(-5) == ".json" then
+            local pos = file:find(".json", 1, true)
+            local start = pos
+
+            local char = file:sub(pos, pos)
+            while char ~= "/" and char ~= "\\" and char ~= "" do
+                pos = pos - 1
+                char = file:sub(pos, pos)
+            end
+
+            if char == "/" or char == "\\" then
+                local name = file:sub(pos + 1, start - 1)
+                if name ~= "options" then
+                    table.insert(out, name)
+                end
+            end
+        end
+    end
+
+    return out
+end
+
+function FlagsManager:GetAutoLoadConfig()
+    local autoLoadFile = FlagsManager.Folder .. "/autoload.txt"
+    if isfile(autoLoadFile) then
+        return readfile(autoLoadFile)
+    end
+    return ""
+end
+
+function FlagsManager:SetAutoLoadConfig(configName)
+    local autoLoadFile = FlagsManager.Folder .. "/autoload.txt"
+    if configName and configName ~= "" then
+        writefile(autoLoadFile, configName)
+    else
+        if isfile(autoLoadFile) then
+            delfile(autoLoadFile)
+        end
+    end
+end
+
+function FlagsManager:SetLibrary(library)
+    FlagsManager.Library = library
+    FlagsManager.Flags = library.Flags
+end
+
+-- Fungsi helper untuk notifikasi yang aman
+local function SafeNotification(title, message, duration)
+    if FlagsManager.Library and FlagsManager.Library.Notification then
+        local success = pcall(function()
+            FlagsManager.Library:Notification(title, message, duration or 3)
+        end)
+    end
+end
+
+-- Fungsi helper untuk membuat UI element dengan error handling yang lebih robust
+local function SafeCreateElement(parent, elementType, config)
+    if not parent then
+        warn("SafeCreateElement: Parent is nil for " .. tostring(elementType))
+        return nil
+    end
+    
+    local success, element = pcall(function()
+        if elementType == "Section" then
+            return parent:AddSection(config)
+        elseif elementType == "Textbox" then
+            return parent:AddTextbox(config)
+        elseif elementType == "Dropdown" then
+            return parent:AddDropdown(config.Flag or "TempDropdown", config)
+        elseif elementType == "GroupButton" then
+            -- Coba panggil AddGroupButton tanpa parameter
+            return parent:AddGroupButton()
+        elseif elementType == "Button" then
+            return parent:AddButton(config)
+        elseif elementType == "Paragraph" then
+            return parent:AddParagraph(config)
+        else
+            warn("SafeCreateElement: Unknown element type: " .. tostring(elementType))
+            return nil
+        end
+    end)
+    
+    if success and element then
+        return element
+    else
+        warn("SafeCreateElement: Failed to create " .. tostring(elementType) .. " - " .. tostring(element))
+        return nil
+    end
+end
+
+function FlagsManager:InitSaveSystem(tab)
+    -- Validasi parameter utama dengan pengecekan yang lebih ketat
+    if not tab then
+        warn("FlagsManager:InitSaveSystem - tab parameter is required")
+        SafeNotification('Error', 'Failed to initialize save system: tab parameter is nil', 5)
+        return false
+    end
+    
+    -- Cek apakah tab memiliki method yang diperlukan
+    if type(tab.AddSection) ~= "function" then
+        warn("FlagsManager:InitSaveSystem - tab does not have AddSection method")
+        SafeNotification('Error', 'Invalid tab object provided', 5)
+        return false
+    end
+    
+    -- Validasi Library
+    if not FlagsManager.Library then
+        warn("FlagsManager:InitSaveSystem - Library is not set. Call SetLibrary first.")
+        SafeNotification('Error', 'Library not initialized. Call SetLibrary first.', 5)
+        return false
+    end
+    
+    -- Validasi Flags
+    if not FlagsManager.Flags then
+        warn("FlagsManager:InitSaveSystem - Flags is not set. Library may not be properly initialized.")
+        SafeNotification('Error', 'Flags not initialized properly.', 5)
+        return false
+    end
+
+    -- Build folder structure terlebih dahulu
+    local success = pcall(function()
+        FlagsManager:BuildFolderTree()
+    end)
+    
+    if not success then
+        warn("FlagsManager:InitSaveSystem - Failed to build folder tree")
+        SafeNotification('Error', 'Failed to create folder structure', 5)
+        return false
+    end
+
+    -- Variabel untuk menyimpan state
+    local SaveManager_ConfigName = ""
+    local SaveManager_AutoLoadConfig = ""
+    
+    -- Safely get auto load config
+    local autoLoadSuccess = pcall(function()
+        SaveManager_AutoLoadConfig = FlagsManager:GetAutoLoadConfig()
+    end)
+    
+    if not autoLoadSuccess then
+        SaveManager_AutoLoadConfig = ""
+    end
+
+    -- Buat Anti-AFK Status Section (hanya menampilkan status, tidak ada toggle)
+    local AntiAFKSection = SafeCreateElement(tab, "Section", {
+        Title = gradient("Anti-AFK Status"), 
+        Description = "Anti-AFK system is automatically active", 
+        Default = false, 
+        Locked = false
+    })
+    
+    if AntiAFKSection then
+        -- Tambahkan Status Paragraph
+        local AntiAFKStatus = SafeCreateElement(AntiAFKSection, "Paragraph", {
+            Title = "Anti-AFK System",
+            Description = "Status: " .. (FlagsManager.AntiAFK.Enabled and "Active" or "Starting..."),
+        })
+        
+        -- Update status secara berkala
+        task.spawn(function()
+            while true do
+                task.wait(2)
+                if AntiAFKStatus then
+                    pcall(function()
+                        -- Update status paragraph jika tersedia
+                        local currentStatus = FlagsManager.AntiAFK.Enabled and "Active" or "Starting..."
+                        if AntiAFKStatus.SetDesc then
+                            AntiAFKStatus:SetDesc("Status: " .. currentStatus)
+                        end
+                    end)
+                end
+            end
+        end)
+    end
+
+    -- Variabel untuk menyimpan referensi AutoLoadParagraph (deklarasi di awal)
+    local AutoLoadParagraph = nil
+    
+    -- Buat Configuration Section dengan format yang diminta
+    local ConfigSection = SafeCreateElement(tab, "Section", {
+        Title = gradient("Import/Export Configs"), 
+        Description = "", 
+        Default = false, 
+        Locked = false
+    })
+    
+    if not ConfigSection then
+        SafeNotification('Error', 'Failed to create Configuration section', 5)
+        return false
+    end
+
+    -- Tambahkan Textbox untuk nama config
+    local ConfigNameTextbox = SafeCreateElement(ConfigSection, "Textbox", {
+        Title = "Config Name",
+        Description = "Enter a name for your configuration",
+        Default = "",
+        PlaceHolder = "Enter config name...",
+        TextDisappear = false,
+        Callback = function(value)
+            SaveManager_ConfigName = value or ""
+        end
+    })
+
+    -- Tambahkan Dropdown untuk daftar konfigurasi
+    local configList = {}
+    pcall(function()
+        configList = FlagsManager:RefreshConfigList()
+    end)
+    
+    local ConfigDropdown = SafeCreateElement(ConfigSection, "Dropdown", {
+        Flag = "SaveManager_ConfigurationList",
+        Title = "Configuration List",
+        Description = "Select a configuration to load",
+        Options = configList,
+        Default = "",
+        PlaceHolder = "Select configuration...",
+        Multiple = false,
+        Callback = function(value)
+            -- Callback untuk dropdown selection
+        end
+    })
+
+    -- Buat Group Button untuk tombol-tombol - panggil tanpa config
+    local SaveManagerGroupButton = SafeCreateElement(ConfigSection, "GroupButton")
+    
+    if not SaveManagerGroupButton then
+        SafeNotification('Error', 'Failed to create button group', 5)
+        return false
+    end
+
+    -- Konfigurasi tombol-tombol dengan error handling yang lebih baik
+    local buttonConfigs = {
+        {
+            Title = "Create Configuration",
+            Variant = "Primary",
+            Callback = function()
+                local name = SaveManager_ConfigName
+
+                if not name or name:gsub(" ", "") == "" then
+                    SafeNotification('Error', 'Please enter a valid config name', 3)
+                    return
+                end
+
+                local success, err = pcall(function()
+                    return FlagsManager:Save(name)
+                end)
+                
+                if not success or not err then
+                    SafeNotification('Error', 'Failed to create config: ' .. tostring(err), 3)
+                    return
+                end
+
+                SafeNotification('Success', string.format('Created config "%s"', name), 3)
+
+                -- Refresh dropdown list
+                pcall(function()
+                    if FlagsManager.Flags.SaveManager_ConfigurationList then
+                        FlagsManager.Flags.SaveManager_ConfigurationList:Refresh(FlagsManager:RefreshConfigList())
+                        FlagsManager.Flags.SaveManager_ConfigurationList:Set("")
+                    end
+                end)
+            end,
+        },
+        {
+            Title = "Load Configuration",
+            Variant = "Outline",
+            Callback = function()
+                local name = ""
+                pcall(function()
+                    name = FlagsManager.Flags.SaveManager_ConfigurationList and FlagsManager.Flags.SaveManager_ConfigurationList.Value or ""
+                end)
+
+                if not name or name == "" then
+                    SafeNotification('Error', 'Please select a config to load', 3)
+                    return
+                end
+
+                local success, err = pcall(function()
+                    return FlagsManager:Load(name)
+                end)
+                
+                if not success or not err then
+                    SafeNotification('Error', 'Failed to load config: ' .. tostring(err), 3)
+                    return
+                end
+
+                SafeNotification('Success', string.format('Loaded config "%s"', name), 3)
+            end,
+        },
+        {
+            Title = "Save Configuration",
+            Variant = "Outline",
+            Callback = function()
+                local name = ""
+                pcall(function()
+                    name = FlagsManager.Flags.SaveManager_ConfigurationList and FlagsManager.Flags.SaveManager_ConfigurationList.Value or ""
+                end)
+
+                if not name or name == "" then
+                    SafeNotification('Error', 'Please select a config to save', 3)
+                    return
+                end
+
+                local success, err = pcall(function()
+                    return FlagsManager:Save(name)
+                end)
+                
+                if not success or not err then
+                    SafeNotification('Error', 'Failed to save config: ' .. tostring(err), 3)
+                    return
+                end
+
+                SafeNotification('Success', string.format('Saved config "%s"', name), 3)
+            end,
+        },
+        {
+            Title = "Delete Configuration",
+            Variant = "Outline",
+            Callback = function()
+                local name = ""
+                pcall(function()
+                    name = FlagsManager.Flags.SaveManager_ConfigurationList and FlagsManager.Flags.SaveManager_ConfigurationList.Value or ""
+                end)
+
+                if not name or name == "" then
+                    SafeNotification('Error', 'Please select a config to delete', 3)
+                    return
+                end
+
+                -- Check if the config being deleted is the current auto load config
+                local currentAutoLoad = ""
+                pcall(function()
+                    currentAutoLoad = FlagsManager:GetAutoLoadConfig()
+                end)
+
+                local success, err = pcall(function()
+                    return FlagsManager:Delete(name)
+                end)
+                
+                if not success or not err then
+                    SafeNotification('Error', 'Failed to delete config: ' .. tostring(err), 3)
+                    return
+                end
+
+                -- If deleted config was the auto load config, clear it
+                if currentAutoLoad == name then
+                    pcall(function()
+                        FlagsManager:SetAutoLoadConfig("")
+                        -- Update paragraph description
+                        if AutoLoadParagraph and AutoLoadParagraph.SetDesc then
+                            AutoLoadParagraph:SetDesc("Current Auto Load: None")
+                        end
+                    end)
+                end
+                SafeNotification('Success', string.format('Deleted config "%s"', name), 3)
+
+                -- Refresh dropdown list setelah penghapusan
+                pcall(function()
+                    if FlagsManager.Flags.SaveManager_ConfigurationList then
+                        FlagsManager.Flags.SaveManager_ConfigurationList:Refresh(FlagsManager:RefreshConfigList())
+                        FlagsManager.Flags.SaveManager_ConfigurationList:Set("")
+                    end
+                end)
+            end,
+        },
+        {
+            Title = "Refresh List",
+            Variant = "Outline",
+            Callback = function()
+                pcall(function()
+                    if FlagsManager.Flags.SaveManager_ConfigurationList then
+                        FlagsManager.Flags.SaveManager_ConfigurationList:Refresh(FlagsManager:RefreshConfigList())
+                        FlagsManager.Flags.SaveManager_ConfigurationList:Set("")
+                    end
+                end)
+                SafeNotification('Info', 'Configuration list refreshed', 2)
+            end,
+        },
+        {
+            Title = "Set Auto Load",
+            Variant = "Outline",
+            Callback = function()
+                local name = ""
+                pcall(function()
+                    name = FlagsManager.Flags.SaveManager_ConfigurationList and FlagsManager.Flags.SaveManager_ConfigurationList.Value or ""
+                end)
+
+                if not name or name == "" then
+                    -- Clear auto load
+                    pcall(function()
+                        FlagsManager:SetAutoLoadConfig("")
+                        -- Update paragraph description
+                        if AutoLoadParagraph and AutoLoadParagraph.SetDesc then
+                            AutoLoadParagraph:SetDesc("Current Auto Load: None")
+                        end
+                    end)
+                    SafeNotification('Info', 'Auto load config cleared', 3)
+                else
+                    pcall(function()
+                        FlagsManager:SetAutoLoadConfig(name)
+                        -- Update paragraph description
+                        if AutoLoadParagraph and AutoLoadParagraph.SetDesc then
+                            AutoLoadParagraph:SetDesc("Current Auto Load: " .. name)
+                        end
+                    end)
+                    SafeNotification('Success', string.format('Set auto load config to "%s"', name), 3)
+                end
+            end,
+        }
+    }
+
+    -- Tambahkan semua tombol dengan error handling
+    for _, buttonConfig in ipairs(buttonConfigs) do
+        local button = SafeCreateElement(SaveManagerGroupButton, "Button", buttonConfig)
+        if not button then
+            warn("Failed to create button: " .. buttonConfig.Title)
+        end
+    end
+
+    -- Tambahkan informasi Auto Load Config
+    AutoLoadParagraph = SafeCreateElement(ConfigSection, "Paragraph", {
+        Title = "Auto Load Config",
+        Description = "Current Auto Load: " .. (SaveManager_AutoLoadConfig ~= "" and SaveManager_AutoLoadConfig or "None"),
+    })
+
+    -- Auto load config jika ada yang diset
+    if SaveManager_AutoLoadConfig ~= "" then
+        task.spawn(function()
+            task.wait(3) -- Tunggu inisialisasi selesai
+            local success, err = pcall(function()
+                return FlagsManager:Load(SaveManager_AutoLoadConfig)
+            end)
+            
+            if success and err then
+                SafeNotification('Auto Load', string.format('Successfully loaded config "%s"', SaveManager_AutoLoadConfig), 3)
+            else
+                SafeNotification('Auto Load', string.format('Failed to load config "%s": %s', SaveManager_AutoLoadConfig, tostring(err)), 3)
+            end
+        end)
+    end
+
+    SafeNotification('Success', 'Save system initialized successfully', 2)
+    return true
+end
+
+return FlagsManager
